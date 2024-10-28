@@ -1,6 +1,7 @@
 #include "tkrzw_dbm_poly.h"
 #include <napi.h>
 #include "../include/config_parser.hpp"
+#include "../include/dbm_async_worker.hpp"
 
 
 class databaseWrapper : public Napi::ObjectWrap<databaseWrapper>
@@ -12,11 +13,11 @@ class databaseWrapper : public Napi::ObjectWrap<databaseWrapper>
     public:
         static Napi::Object Init(Napi::Env env, Napi::Object exports);          //required by Node!
         databaseWrapper(const Napi::CallbackInfo& info);
-        Napi::Value set(const Napi::CallbackInfo& info);
-        Napi::Value getSimple(const Napi::CallbackInfo& info);
+        Napi::Value set(const Napi::CallbackInfo& info);                        //async promise
+        Napi::Value getSimple(const Napi::CallbackInfo& info);                  //async promise
+        Napi::Value close(const Napi::CallbackInfo& info);
         
 };
-
 
 
 
@@ -41,15 +42,19 @@ Napi::Value databaseWrapper::set(const Napi::CallbackInfo& info)
     Napi::Env env = info.Env();
     std::string key = info[0].As<Napi::String>().ToString().Utf8Value();
     std::string value = info[1].As<Napi::String>().ToString().Utf8Value();
+
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(env, dbm, dbmAsyncWorker::SET, key, value);
+    asyncWorker->Queue();
+    return asyncWorker->deferred_promise.Promise();
     
-    tkrzw::Status set_status = dbm.Set(key,value);
+    /*tkrzw::Status set_status = dbm.Set(key,value);
     if( set_status != tkrzw::Status::SUCCESS)
     {
         Napi::TypeError::New(env, set_status.GetMessage().c_str()).ThrowAsJavaScriptException();
         return Napi::Boolean::New(env, false);
     }
     else
-    { return Napi::Boolean::New(env, true); }
+    { return Napi::Boolean::New(env, true); }*/
 }
 
 Napi::Value databaseWrapper::getSimple(const Napi::CallbackInfo& info)
@@ -57,10 +62,28 @@ Napi::Value databaseWrapper::getSimple(const Napi::CallbackInfo& info)
     Napi::Env env = info.Env();
     std::string key = info[0].As<Napi::String>().ToString().Utf8Value();
     std::string default_value = info[1].As<Napi::String>().ToString().Utf8Value();
-    
-    std::string getSimple_result = dbm.GetSimple(key,default_value);
 
-    return Napi::String::New(env, getSimple_result);
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(env, dbm, dbmAsyncWorker::GET_SIMPLE, key, default_value);
+    asyncWorker->Queue();
+    return asyncWorker->deferred_promise.Promise();
+    
+    /*std::string getSimple_result = dbm.GetSimple(key,default_value);
+
+    return Napi::String::New(env, getSimple_result);*/
+}
+
+Napi::Value databaseWrapper::close(const Napi::CallbackInfo& info)
+{
+    std::cout << "CLOSE" << std::endl;
+    Napi::Env env = info.Env();
+    tkrzw::Status close_status = dbm.Close();
+    if( close_status != tkrzw::Status::SUCCESS)
+    {
+        Napi::TypeError::New(env, close_status.GetMessage().c_str()).ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+    else
+    { return Napi::Boolean::New(env, true); }
 }
 
 //====================================================================================================================
@@ -72,7 +95,8 @@ Napi::Object databaseWrapper::Init(Napi::Env env, Napi::Object exports)
     Napi::Function functionList = DefineClass(env, "databaseWrapper",
     {
         InstanceMethod<&databaseWrapper::set>("set", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-        InstanceMethod<&databaseWrapper::getSimple>("getSimple", static_cast<napi_property_attributes>(napi_writable | napi_configurable))
+        InstanceMethod<&databaseWrapper::getSimple>("getSimple", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&databaseWrapper::close>("close", static_cast<napi_property_attributes>(napi_writable | napi_configurable))
     });
 
     Napi::FunctionReference* constructor = new Napi::FunctionReference();

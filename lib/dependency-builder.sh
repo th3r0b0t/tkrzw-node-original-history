@@ -17,10 +17,10 @@ rm -f tkrzw-1.0.32.tar.gz
 
 clear
 
-printf "We need sudo rights to install liblz4-dev, please provide password if prompted:\n"
-sudo apt install liblz4-dev
+printf "We need sudo rights to install liblz4-dev and cmake, please provide password if prompted:\n"
+sudo apt install liblz4-dev cmake
 
-printf "\033[0;31mWe are going to build Tkrzw library, it can take several minutes;\033[0mIf you aren't ready, use ctrl+c to stop script:\n"
+printf "\033[0;31mWe are going to build Tkrzw library, it can take several minutes;\033[0m If you aren't ready, use ctrl+c to stop script:\n"
 read -p "Enter to start building or ctrl+c to stop:    "
 
 cd tkrzw-1.0.32

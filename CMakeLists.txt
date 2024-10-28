@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(PICO_ENABLE_CXX_EXCEPTIONS 1)
+
 # Name of the project (will be the name of the plugin)
 project(tkrzw-node)
 
@@ -9,6 +11,7 @@ project(tkrzw-node)
 set(SOURCE_FILES 
     ${CMAKE_SOURCE_DIR}/src/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/config_parser.cpp
+    ${CMAKE_SOURCE_DIR}/src/dbm_async_worker.cpp
 )
 
 if( NOT (EXISTS "${CMAKE_SOURCE_DIR}/lib/libtkrzw.a") )

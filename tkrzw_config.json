@@ -11,5 +11,6 @@
     "ulog_prefix": "dbmLog",
     "ulog_max_file_size": "128Mi",
     "ulog_server_id": "555",
-    "ulog_dbm_index": "777"
+    "ulog_dbm_index": "777",
+    "record_comp_mode": "RECORD_COMP_LZ4"
 }

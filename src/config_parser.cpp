@@ -1,6 +1,6 @@
 #include "../include/config_parser.hpp"
 
-std::map<std::string, std::string> parseConfig(const Napi::Env env, Napi::String jsonConfig)
+std::map<std::string, std::string> parseConfig(const Napi::Env& env, Napi::String jsonConfig)
 {
     // Napi::Env env = info.Env();
     // Napi::String json_string = info[0].As<Napi::String>();
