@@ -9,9 +9,11 @@ project(tkrzw-node)
 
 # Build a shared library named after the project from the files in `src/`
 set(SOURCE_FILES 
-    ${CMAKE_SOURCE_DIR}/src/driver.cpp
     ${CMAKE_SOURCE_DIR}/src/config_parser.cpp
     ${CMAKE_SOURCE_DIR}/src/dbm_async_worker.cpp
+    ${CMAKE_SOURCE_DIR}/src/polyDBM_wrapper.cpp
+    ${CMAKE_SOURCE_DIR}/src/polyIndex_wrapper.cpp
+    ${CMAKE_SOURCE_DIR}/src/tkrzw_main_export.cpp
 )
 
 if( NOT (EXISTS "${CMAKE_SOURCE_DIR}/lib/libtkrzw.a") )

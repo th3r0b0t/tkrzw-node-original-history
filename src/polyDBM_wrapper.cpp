@@ -1,31 +1,7 @@
-#include "tkrzw_dbm_poly.h"
-#include <napi.h>
-#include "../include/config_parser.hpp"
-#include "../include/dbm_async_worker.hpp"
+#include "../include/polyDBM_wrapper.hpp"
 
 
-class databaseWrapper : public Napi::ObjectWrap<databaseWrapper>
-{
-    private:
-        tkrzw::PolyDBM dbm;
-        //std::map<std::string, std::string> optional_tuning_params;
-    
-    public:
-        static Napi::Object Init(Napi::Env env, Napi::Object exports);          //required by Node!
-        databaseWrapper(const Napi::CallbackInfo& info);
-        Napi::Value set(const Napi::CallbackInfo& info);                        //async promise
-        Napi::Value getSimple(const Napi::CallbackInfo& info);                  //async promise
-        Napi::Value shouldBeRebuilt(const Napi::CallbackInfo& info);            //async promise
-        Napi::Value rebuild(const Napi::CallbackInfo& info);                    //async promise
-        Napi::Value close(const Napi::CallbackInfo& info);
-        void Finalize(Napi::BasicEnv env);
-};
-
-
-
-//====================================================================================================================
-
-databaseWrapper::databaseWrapper(const Napi::CallbackInfo& info) : Napi::ObjectWrap<databaseWrapper>(info)
+polyDBM_wrapper::polyDBM_wrapper(const Napi::CallbackInfo& info) : Napi::ObjectWrap<polyDBM_wrapper>(info)
 {
     Napi::Env env = info.Env();
     std::map<std::string, std::string> optional_tuning_params;
@@ -48,13 +24,13 @@ databaseWrapper::databaseWrapper(const Napi::CallbackInfo& info) : Napi::ObjectW
     }
 }
 
-Napi::Value databaseWrapper::set(const Napi::CallbackInfo& info)
+Napi::Value polyDBM_wrapper::set(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();
     std::string key = info[0].As<Napi::String>().ToString().Utf8Value();
     std::string value = info[1].As<Napi::String>().ToString().Utf8Value();
 
-    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::SET, key, value);
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::DBM_SET, key, value);
     asyncWorker->Queue();
     return asyncWorker->deferred_promise.Promise();
     
@@ -68,13 +44,13 @@ Napi::Value databaseWrapper::set(const Napi::CallbackInfo& info)
     { return Napi::Boolean::New(env, true); }*/
 }
 
-Napi::Value databaseWrapper::getSimple(const Napi::CallbackInfo& info)
+Napi::Value polyDBM_wrapper::getSimple(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();
     std::string key = info[0].As<Napi::String>().ToString().Utf8Value();
     std::string default_value = info[1].As<Napi::String>().ToString().Utf8Value();
 
-    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::GET_SIMPLE, key, default_value);
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::DBM_GET_SIMPLE, key, default_value);
     asyncWorker->Queue();
     return asyncWorker->deferred_promise.Promise();
     
@@ -83,9 +59,9 @@ Napi::Value databaseWrapper::getSimple(const Napi::CallbackInfo& info)
     return Napi::String::New(env, getSimple_result);*/
 }
 
-Napi::Value databaseWrapper::shouldBeRebuilt(const Napi::CallbackInfo& info)
+Napi::Value polyDBM_wrapper::shouldBeRebuilt(const Napi::CallbackInfo& info)
 {
-    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::SHOULD_BE_REBUILT);
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::DBM_SHOULD_BE_REBUILT);
     asyncWorker->Queue();
     return asyncWorker->deferred_promise.Promise();
     
@@ -94,7 +70,7 @@ Napi::Value databaseWrapper::shouldBeRebuilt(const Napi::CallbackInfo& info)
     return Napi::String::New(env, getSimple_result);*/
 }
 
-Napi::Value databaseWrapper::rebuild(const Napi::CallbackInfo& info)
+Napi::Value polyDBM_wrapper::rebuild(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();
     std::map<std::string, std::string> optional_tuning_params;
@@ -109,7 +85,7 @@ Napi::Value databaseWrapper::rebuild(const Napi::CallbackInfo& info)
         optional_tuning_params = parseConfig(env, configObject);
     }
 
-    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::REBUILD, optional_tuning_params);
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::DBM_REBUILD, optional_tuning_params);
     asyncWorker->Queue();
     return asyncWorker->deferred_promise.Promise();
     
@@ -118,9 +94,9 @@ Napi::Value databaseWrapper::rebuild(const Napi::CallbackInfo& info)
     return Napi::String::New(env, getSimple_result);*/
 }
 
-Napi::Value databaseWrapper::close(const Napi::CallbackInfo& info)
+Napi::Value polyDBM_wrapper::close(const Napi::CallbackInfo& info)
 {
-    std::cout << "CLOSE" << std::endl;
+    std::cout << "CLOSE DBM" << std::endl;
     Napi::Env env = info.Env();
     tkrzw::Status close_status = dbm.Close();
     if( close_status != tkrzw::Status::SUCCESS)
@@ -135,43 +111,35 @@ Napi::Value databaseWrapper::close(const Napi::CallbackInfo& info)
 //====================================================================================================================
 
 //-----------------JS-Requirements-----------------//
-Napi::Object databaseWrapper::Init(Napi::Env env, Napi::Object exports)
+Napi::Object polyDBM_wrapper::Init(Napi::Env env, Napi::Object exports)
 {
     // This method is used to hook the accessor and method callbacks
-    Napi::Function functionList = DefineClass(env, "tkrzw",
+    Napi::Function functionList = DefineClass(env, "polyDBM",
     {
-        InstanceMethod<&databaseWrapper::set>("set", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-        InstanceMethod<&databaseWrapper::getSimple>("getSimple", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-        InstanceMethod<&databaseWrapper::shouldBeRebuilt>("shouldBeRebuilt", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-        InstanceMethod<&databaseWrapper::rebuild>("rebuild", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-        InstanceMethod<&databaseWrapper::close>("close", static_cast<napi_property_attributes>(napi_writable | napi_configurable))
+        InstanceMethod<&polyDBM_wrapper::set>("set", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&polyDBM_wrapper::getSimple>("getSimple", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&polyDBM_wrapper::shouldBeRebuilt>("shouldBeRebuilt", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&polyDBM_wrapper::rebuild>("rebuild", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&polyDBM_wrapper::close>("close", static_cast<napi_property_attributes>(napi_writable | napi_configurable))
     });
 
     Napi::FunctionReference* constructor = new Napi::FunctionReference();
 
     *constructor = Napi::Persistent(functionList);
-    exports.Set("tkrzw", functionList);
+    exports.Set("polyDBM", functionList);
     env.SetInstanceData<Napi::FunctionReference>(constructor);
 
     return exports;
 }
 
-Napi::Object Init (Napi::Env env, Napi::Object exports)
-{
-    databaseWrapper::Init(env, exports);
-    return exports;
-}
-
-void databaseWrapper::Finalize(Napi::BasicEnv env)
+void polyDBM_wrapper::Finalize(Napi::BasicEnv env)
 {
     tkrzw::Status close_status = dbm.Close();
     if( close_status != tkrzw::Status::SUCCESS)
     {
-        std::cerr << "Finalize: Failed!" << std::endl;
+        std::cerr << "DBM finalize: Failed!" << std::endl;
     }
     else
-    { std::cerr << "Finalize: SUCCESS!" << std::endl; }   
+    { std::cerr << "DBM finalize: SUCCESS!" << std::endl; }   
 }
-
-NODE_API_MODULE(NODE_GYP_MODULE_NAME, Init)
 //-----------------JS-Requirements-----------------//

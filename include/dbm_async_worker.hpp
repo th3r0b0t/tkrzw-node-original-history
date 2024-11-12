@@ -1,6 +1,12 @@
+#ifndef DBM_ASYNC_WORKER_HPP
+#define DBM_ASYNC_WORKER_HPP
+
 #include <any>
+#include <optional>
+#include <functional> // For std::reference_wrapper
 #include <vector>
-#include "tkrzw_dbm_poly.h"
+#include <tkrzw_dbm_poly.h>
+#include <tkrzw_index.h>
 #include <napi.h>
 
 class dbmAsyncWorker : public Napi::AsyncWorker
@@ -8,10 +14,17 @@ class dbmAsyncWorker : public Napi::AsyncWorker
     public:
         enum OPERATION_TYPE
         {
-            SET,
-            GET_SIMPLE,
-            SHOULD_BE_REBUILT,
-            REBUILD
+            DBM_SET,
+            DBM_GET_SIMPLE,
+            DBM_SHOULD_BE_REBUILT,
+            DBM_REBUILD,
+
+            INDEX_ADD,
+            INDEX_GET_VALUES,
+            INDEX_CHECK,
+            INDEX_REMOVE,
+            INDEX_SHOULD_BE_REBUILT,
+            INDEX_REBUILD
         };
 
         /*dbmAsyncWorker(const Napi::Env& env, tkrzw::PolyDBM& dbmReference, OPERATION_TYPE operation, std::string param1, std::string param2);
@@ -28,6 +41,16 @@ class dbmAsyncWorker : public Napi::AsyncWorker
             (params.emplace_back(std::any(paramPack)),...);
         };
 
+        template <typename... argTypes>
+        dbmAsyncWorker(const Napi::Env& env, tkrzw::PolyIndex& indexReference, OPERATION_TYPE operation, argTypes... paramPack):
+        Napi::AsyncWorker(env),
+        indexReference(indexReference),
+        operation(operation),
+        deferred_promise{Env()}
+        {
+            (params.emplace_back(std::any(paramPack)),...);
+        };
+
         void Execute() override;
         void OnOK() override;
         void OnError(const Napi::Error& err) override;
@@ -38,7 +61,13 @@ class dbmAsyncWorker : public Napi::AsyncWorker
         //std::string param1;
         //std::string param2;
         std::vector<std::any> params;
-        std::string result;
+        std::any any_result;
+        //std::string result;
         OPERATION_TYPE operation;
-        tkrzw::PolyDBM& dbmReference;
+        std::optional<std::reference_wrapper<tkrzw::PolyDBM>> dbmReference;
+        std::optional<std::reference_wrapper<tkrzw::PolyIndex>> indexReference;
+        //tkrzw::PolyDBM& dbmReference;
+        //tkrzw::PolyIndex& indexReference;
 };
+
+#endif //DBM_ASYNC_WORKER_HPP
