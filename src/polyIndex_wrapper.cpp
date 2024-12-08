@@ -81,6 +81,16 @@ Napi::Value polyIndex_wrapper::rebuild(const Napi::CallbackInfo& info)
     return asyncWorker->deferred_promise.Promise();
 }
 
+Napi::Value polyIndex_wrapper::sync(const Napi::CallbackInfo& info)
+{
+    Napi::Env env = info.Env();
+    bool sync_hard = info[0].As<Napi::Boolean>().ToBoolean();
+
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), index, dbmAsyncWorker::INDEX_SYNC, sync_hard);
+    asyncWorker->Queue();
+    return asyncWorker->deferred_promise.Promise();
+}
+
 Napi::Value polyIndex_wrapper::close(const Napi::CallbackInfo& info)
 {
     std::cout << "CLOSE INDEX" << std::endl;
@@ -109,6 +119,7 @@ Napi::Object polyIndex_wrapper::Init(Napi::Env env, Napi::Object exports)
         InstanceMethod<&polyIndex_wrapper::remove>("remove", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
         InstanceMethod<&polyIndex_wrapper::shouldBeRebuilt>("shouldBeRebuilt", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
         InstanceMethod<&polyIndex_wrapper::rebuild>("rebuild", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&polyIndex_wrapper::sync>("sync", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
         InstanceMethod<&polyIndex_wrapper::close>("close", static_cast<napi_property_attributes>(napi_writable | napi_configurable))
     });
 

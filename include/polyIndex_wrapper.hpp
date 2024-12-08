@@ -20,6 +20,7 @@ class polyIndex_wrapper : public Napi::ObjectWrap<polyIndex_wrapper>
         Napi::Value remove(const Napi::CallbackInfo& info);
         Napi::Value shouldBeRebuilt(const Napi::CallbackInfo& info);
         Napi::Value rebuild(const Napi::CallbackInfo& info);
+        Napi::Value sync(const Napi::CallbackInfo& info);
         Napi::Value close(const Napi::CallbackInfo& info);
         void Finalize(Napi::BasicEnv env);
 };

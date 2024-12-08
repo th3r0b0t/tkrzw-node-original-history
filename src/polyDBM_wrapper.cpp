@@ -94,6 +94,16 @@ Napi::Value polyDBM_wrapper::rebuild(const Napi::CallbackInfo& info)
     return Napi::String::New(env, getSimple_result);*/
 }
 
+Napi::Value polyDBM_wrapper::sync(const Napi::CallbackInfo& info)
+{
+    Napi::Env env = info.Env();
+    bool sync_hard = info[0].As<Napi::Boolean>().ToBoolean();
+
+    dbmAsyncWorker* asyncWorker = new dbmAsyncWorker(Env(), dbm, dbmAsyncWorker::DBM_SYNC, sync_hard);
+    asyncWorker->Queue();
+    return asyncWorker->deferred_promise.Promise();
+}
+
 Napi::Value polyDBM_wrapper::close(const Napi::CallbackInfo& info)
 {
     std::cout << "CLOSE DBM" << std::endl;
@@ -120,6 +130,7 @@ Napi::Object polyDBM_wrapper::Init(Napi::Env env, Napi::Object exports)
         InstanceMethod<&polyDBM_wrapper::getSimple>("getSimple", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
         InstanceMethod<&polyDBM_wrapper::shouldBeRebuilt>("shouldBeRebuilt", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
         InstanceMethod<&polyDBM_wrapper::rebuild>("rebuild", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+        InstanceMethod<&polyDBM_wrapper::sync>("sync", static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
         InstanceMethod<&polyDBM_wrapper::close>("close", static_cast<napi_property_attributes>(napi_writable | napi_configurable))
     });
 

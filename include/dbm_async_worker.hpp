@@ -18,13 +18,15 @@ class dbmAsyncWorker : public Napi::AsyncWorker
             DBM_GET_SIMPLE,
             DBM_SHOULD_BE_REBUILT,
             DBM_REBUILD,
+            DBM_SYNC,
 
             INDEX_ADD,
             INDEX_GET_VALUES,
             INDEX_CHECK,
             INDEX_REMOVE,
             INDEX_SHOULD_BE_REBUILT,
-            INDEX_REBUILD
+            INDEX_REBUILD,
+            INDEX_SYNC
         };
 
         /*dbmAsyncWorker(const Napi::Env& env, tkrzw::PolyDBM& dbmReference, OPERATION_TYPE operation, std::string param1, std::string param2);

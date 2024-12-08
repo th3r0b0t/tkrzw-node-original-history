@@ -76,6 +76,14 @@ void dbmAsyncWorker::Execute()
             }
         //}
     }
+    else if(operation == DBM_SYNC)
+    {
+        tkrzw::Status sync_status = dbmReference->get().Synchronize( std::any_cast<bool>(params[0]) );
+        if( sync_status != tkrzw::Status::SUCCESS)
+        {
+            SetError("[" + std::to_string(sync_status.GetCode()) + "]: " + sync_status.GetMessage());
+        }
+    }
     //===============================================INDEX_METHODS
     else if(operation == INDEX_ADD)
     {
@@ -125,6 +133,14 @@ void dbmAsyncWorker::Execute()
         if( rebuild_status != tkrzw::Status::SUCCESS)
         {
             SetError("[" + std::to_string(rebuild_status.GetCode()) + "]: " + rebuild_status.GetMessage());
+        }
+    }
+    else if(operation == INDEX_SYNC)
+    {
+        tkrzw::Status sync_status = indexReference->get().Synchronize( std::any_cast<bool>(params[0]) );
+        if( sync_status != tkrzw::Status::SUCCESS)
+        {
+            SetError("(sync) Error dynchronizing index!");
         }
     }
 }
