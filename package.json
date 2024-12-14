@@ -1,6 +1,7 @@
 {
   "name": "tkrzw-node",
-  "version": "1.1.1",
+  "packageType": "module",
+  "version": "1.1.2",
   "description": "Tkrzw DBM bindings for Node.JS",
   "author": "Th3R0b0t",
   "keywords":
